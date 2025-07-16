@@ -1,13 +1,703 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>WebHotels</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestión Hotelera - Fondo slideshow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      background: #000;
+    }
+    /* Contenedor slideshow fondo */
+    #background-slideshow {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+    #background-slideshow img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 110%;
+      height: 110%;
+      object-fit: cover;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+      filter: brightness(0.5);
+      user-select: none;
+      pointer-events: none;
+    }
+    #background-slideshow img.active {
+      opacity: 1;
+    }
+
+    /* Navbar */
+    nav.navbar {
+      display: none; /* oculto al inicio */
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 123, 255, 0.85);
+      box-shadow: 0 4px 6px rgb(0 123 255 / 0.3);
+      backdrop-filter: saturate(180%) blur(10px);
+      padding: 0.5rem 1rem;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1050;
+    }
+    nav.navbar .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 1.2px;
+      color: #fff;
+    }
+    .btn-menu-toggle {
+      font-size: 1.6rem;
+      border: none;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Menú lateral oculto inicialmente y en posición fija lateral izquierda */
+    .menu-opciones {
+      position: fixed;
+      top: 56px; /* altura navbar */
+      left: 0;
+      width: 180px;
+      height: calc(100% - 56px);
+      background: rgba(0, 123, 255, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.3);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 1040;
+    }
+    /* Menú visible */
+    .menu-opciones.show {
+      transform: translateX(0);
+    }
+    /* Botones del menú */
+    .menu-opciones button {
+      min-width: 100%;
+      font-weight: 600;
+      border-radius: 0.375rem;
+      background-color: rgba(255 255 255 / 0.15);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .menu-opciones button:hover {
+      background-color: rgba(255 255 255 / 0.35);
+    }
+
+    /* Ajustar main para dejar espacio al menú lateral cuando está visible */
+    main {
+      max-width: 900px;
+      margin: 2rem auto 4rem auto;
+      padding-left: 1rem;
+      transition: margin-left 0.3s ease;
+    }
+    main.menu-visible {
+      margin-left: 200px; /* espacio para menú lateral */
+    }
+
+    /* Secciones */
+    .seccion {
+      background: rgba(255 255 255 / 0.1);
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      box-shadow: 0 8px 20px rgb(0 0 0 / 0.3);
+      display: none;
+      backdrop-filter: saturate(180%) blur(10px);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    h2 {
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      text-shadow: 0 0 5px rgba(0,0,0,0.7);
+    }
+    label {
+      font-weight: 600;
+      text-shadow: 0 0 4px rgba(0,0,0,0.5);
+    }
+    input, select, textarea {
+      background-color: rgba(255 255 255 / 0.15) !important;
+      border: 1px solid rgba(255,255,255,0.3) !important;
+      color: #fff !important;
+      box-shadow: none !important;
+      transition: background-color 0.3s ease;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #ddd !important;
+      opacity: 1;
+    }
+    input:focus, textarea:focus, select:focus {
+      background-color: rgba(255 255 255 / 0.3) !important;
+      outline: none !important;
+      border-color: #0d6efd !important;
+      color: #fff !important;
+      box-shadow: 0 0 8px #0d6efd !important;
+    }
+    .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+      border-color: #0b5ed7;
+    }
+    ul.list-group {
+      max-height: 250px;
+      overflow-y: auto;
+      background-color: rgba(0,0,0,0.25);
+      border-radius: 6px;
+      padding: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    ul.list-group li {
+      background: rgba(255 255 255 / 0.15);
+      margin-bottom: 0.3rem;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.4);
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Botón Iniciar Gestiones centrado */
+    #btn-iniciar-gestiones {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.8rem;
+      padding: 1.5rem 3rem;
+      border-radius: 10px;
+      background-color: #dc3545; /* btn-warning rojo */
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgb(220 53 69 / 0.6);
+      transition: background-color 0.3s ease;
+      z-index: 1050;
+      user-select: none;
+    }
+    #btn-iniciar-gestiones:hover {
+      background-color: #bb2d3b;
+    }
+
+    /* Scroll interno para listas */
+    ul.list-group {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255 255 255 / 0.3) transparent;
+    }
+    ul.list-group::-webkit-scrollbar {
+      width: 8px;
+    }
+    ul.list-group::-webkit-scrollbar-thumb {
+      background-color: rgba(255 255 255 / 0.3);
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+
+  <!-- Fondo slideshow -->
+  <div id="background-slideshow">
+    <img src="https://tse1.mm.bing.net/th/id/OIP.7BLYKz_wguk60PK3rfzkRwHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="active" alt="fondo1" />
+    <img src="https://static.nationalgeographicla.com/files/styles/image_3200/public/nationalgeographic2709972.webp?w=1600&h=900" alt="fondo2" />
+    <img src="https://cdn.inteligenciaviajera.com/wp-content/uploads/2020/04/buenos-sitios-tur%C3%ADsticos.jpg" alt="fondo3" />
+    <img src="https://e1.pxfuel.com/desktop-wallpaper/440/49/desktop-wallpaper-world-tourist-places-the-top-10-overrated-tourist-attractions-in-the-world-tourist-places.jpg" alt="fondo4" />
+    <img src="https://cdn.inteligenciaviajera.com/wp-content/uploads/2020/04/mejores-sitios-turisticos-1.jpg" alt="fondo5" />
+  </div>
+
+  <!-- Botón iniciar -->
+  <button id="btn-iniciar-gestiones">Iniciar gestiones</button>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark px-3">
+    <span class="navbar-brand mb-0 h1">Gestión Hotelera</span>
+    <button class="btn-menu-toggle" id="btn-menu-toggle" aria-label="Menú hamburguesa">☰</button>
+  </nav>
+
+  <!-- Menú lateral -->
+  <div class="menu-opciones" id="menuOpciones">
+    <button class="btn" data-seccion="clientes">CLIENTES</button>
+    <button class="btn" data-seccion="habitaciones">HABITACIONES</button>
+    <button class="btn" data-seccion="reservas">RESERVAS</button>
+    <button class="btn" data-seccion="pagos">PAGOS</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <main>
+    <!-- CLIENTES -->
+    <section class="seccion" id="clientes">
+      <h2>CLIENTES</h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <h5>Crear Cliente</h5>
+          <input id="cliente-id" class="form-control" placeholder="ID Cliente" />
+          <input id="cliente-nombre" class="form-control mt-2" placeholder="Nombre" />
+          <input id="cliente-email" class="form-control mt-2" placeholder="Email" type="email" />
+          <button class="btn btn-primary mt-2" onclick="crearCliente()">Crear</button>
+        </div>
+        <div class="col-md-4">
+          <h5>Actualizar Cliente</h5>
+          <input id="cliente-id-actualizar" class="form-control" placeholder="ID Cliente" />
+          <input id="cliente-nombre-actualizar" class="form-control mt-2" placeholder="Nombre" />
+          <input id="cliente-email-actualizar" class="form-control mt-2" placeholder="Email" type="email" />
+          <button class="btn btn-primary mt-2" onclick="actualizarCliente()">Actualizar</button>
+        </div>
+        <div class="col-md-4">
+          <h5>Eliminar Cliente</h5>
+          <input id="cliente-id-eliminar" class="form-control" placeholder="ID Cliente" />
+          <button class="btn btn-primary mt-2" onclick="eliminarCliente()">Eliminar</button>
+        </div>
+      </div>
+      <ul class="list-group" id="clientes-output"></ul>
+    </section>
+
+    <!-- HABITACIONES -->
+    <section class="seccion" id="habitaciones">
+      <h2>HABITACIONES</h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <h5>Crear Habitación</h5>
+          <input id="hab-id" class="form-control" placeholder="ID Habitación" />
+          <input id="hab-numero" class="form-control mt-2" placeholder="Número" />
+          <input id="hab-tipo" class="form-control mt-2" placeholder="Tipo" />
+          <input id="hab-precio" class="form-control mt-2" placeholder="Precio" type="number" />
+          <button class="btn btn-primary mt-2" onclick="crearHabitacion()">Crear</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Actualizar Habitación</h5>
+          <input id="hab-id-actualizar" class="form-control" placeholder="ID Habitación" />
+          <input id="hab-numero-actualizar" class="form-control mt-2" placeholder="Número" />
+          <input id="hab-tipo-actualizar" class="form-control mt-2" placeholder="Tipo" />
+          <input id="hab-precio-actualizar" class="form-control mt-2" placeholder="Precio" type="number" />
+          <button class="btn btn-primary mt-2" onclick="actualizarHabitacion()">Actualizar</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Eliminar Habitación</h5>
+          <input id="hab-id-eliminar" class="form-control" placeholder="ID Habitación" />
+          <button class="btn btn-primary mt-2" onclick="eliminarHabitacion()">Eliminar</button>
+        </div>
+      </div>
+      <ul class="list-group" id="habitaciones-output"></ul>
+    </section>
+
+    <!-- RESERVAS -->
+    <section class="seccion" id="reservas">
+      <h2>RESERVAS</h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <h5>Crear Reserva</h5>
+          <input id="res-id" class="form-control" placeholder="ID Reserva" />
+          <input id="res-cliente-id" class="form-control mt-2" placeholder="ID Cliente" />
+          <input id="res-habitacion-id" class="form-control mt-2" placeholder="ID Habitación" />
+          <input id="res-fecha-in" class="form-control mt-2" type="date" />
+          <input id="res-fecha-out" class="form-control mt-2" type="date" />
+          <button class="btn btn-primary mt-2" onclick="crearReserva()">Crear</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Actualizar Reserva</h5>
+          <input id="res-id-actualizar" class="form-control" placeholder="ID Reserva" />
+          <input id="res-cliente-id-actualizar" class="form-control mt-2" placeholder="ID Cliente" />
+          <input id="res-habitacion-id-actualizar" class="form-control mt-2" placeholder="ID Habitación" />
+          <input id="res-fecha-in-actualizar" class="form-control mt-2" type="date" />
+          <input id="res-fecha-out-actualizar" class="form-control mt-2" type="date" />
+          <button class="btn btn-primary mt-2" onclick="actualizarReserva()">Actualizar</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Eliminar Reserva</h5>
+          <input id="res-id-eliminar" class="form-control" placeholder="ID Reserva" />
+          <button class="btn btn-primary mt-2" onclick="eliminarReserva()">Eliminar</button>
+        </div>
+      </div>
+      <ul class="list-group" id="reservas-output"></ul>
+    </section>
+
+    <!-- PAGOS -->
+    <section class="seccion" id="pagos">
+      <h2>PAGOS</h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <h5>Crear Pago</h5>
+          <input id="pag-id" class="form-control" placeholder="ID Pago" />
+          <input id="pag-reserva-id" class="form-control mt-2" placeholder="ID Reserva" />
+          <input id="pag-monto" class="form-control mt-2" placeholder="Monto" type="number" />
+          <input id="pag-fecha" class="form-control mt-2" type="date" />
+          <button class="btn btn-primary mt-2" onclick="crearPago()">Crear</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Actualizar Pago</h5>
+          <input id="pag-id-actualizar" class="form-control" placeholder="ID Pago" />
+          <input id="pag-reserva-id-actualizar" class="form-control mt-2" placeholder="ID Reserva" />
+          <input id="pag-monto-actualizar" class="form-control mt-2" placeholder="Monto" type="number" />
+          <input id="pag-fecha-actualizar" class="form-control mt-2" type="date" />
+          <button class="btn btn-primary mt-2" onclick="actualizarPago()">Actualizar</button>
+        </div>
+        <div class="col-md-3">
+          <h5>Eliminar Pago</h5>
+          <input id="pag-id-eliminar" class="form-control" placeholder="ID Pago" />
+          <button class="btn btn-primary mt-2" onclick="eliminarPago()">Eliminar</button>
+        </div>
+      </div>
+      <ul class="list-group" id="pagos-output"></ul>
+    </section>
+  </main>
+
+  <script>
+    // --- Fondo slideshow ---
+    const slides = document.querySelectorAll('#background-slideshow img');
+    let currentSlide = 0;
+    setInterval(() => {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (currentSlide + 1) % slides.length;
+      slides[currentSlide].classList.add('active');
+    }, 5000);
+
+    // --- Variables DOM ---
+    const btnMenu = document.getElementById('btn-menu-toggle');
+    const menuOpciones = document.getElementById('menuOpciones');
+    const mainContent = document.querySelector('main');
+    const nav = document.querySelector('nav.navbar');
+    const btnIniciar = document.getElementById('btn-iniciar-gestiones');
+
+    // Ocultar todas las secciones
+    function ocultarSecciones(){
+      document.querySelectorAll('.seccion').forEach(sec => sec.style.display = 'none');
+    }
+    // Mostrar una sección concreta
+    function mostrarSeccion(id){
+      ocultarSecciones();
+      const seccion = document.getElementById(id);
+      if(seccion){
+        seccion.style.display = 'block';
+      }
+    }
+
+    // Evento iniciar gestión
+    btnIniciar.addEventListener('click', () => {
+      btnIniciar.style.display = 'none';
+      nav.style.display = 'flex'; // mostrar navbar
+      menuOpciones.classList.remove('show'); // menú oculto al iniciar
+      mainContent.classList.remove('menu-visible');
+      mostrarSeccion('clientes'); // mostrar clientes por defecto al iniciar
+    });
+
+    // Toggle menú lateral
+    btnMenu.addEventListener('click', () => {
+      menuOpciones.classList.toggle('show');
+      if(menuOpciones.classList.contains('show')){
+        mainContent.classList.add('menu-visible');
+      } else {
+        mainContent.classList.remove('menu-visible');
+      }
+    });
+
+    // Al elegir opción menú lateral
+    document.querySelectorAll('.menu-opciones button').forEach(btn => {
+      btn.addEventListener('click', e => {
+        mostrarSeccion(e.target.dataset.seccion);
+        menuOpciones.classList.remove('show');
+        mainContent.classList.remove('menu-visible');
+      });
+    });
+
+    // --- Datos simulados y funciones CRUD clientes ---
+    let clientes = [];
+    function crearCliente() {
+      const id = document.getElementById('cliente-id').value.trim();
+      const nombre = document.getElementById('cliente-nombre').value.trim();
+      const email = document.getElementById('cliente-email').value.trim();
+      if(!id || !nombre || !email){
+        alert('Complete todos los campos para crear cliente.');
+        return;
+      }
+      if(clientes.find(c=> c.id === id)){
+        alert('El ID ya existe.');
+        return;
+      }
+      clientes.push({id, nombre, email});
+      mostrarClientes();
+      alert('Cliente creado.');
+    }
+    function actualizarCliente() {
+      const id = document.getElementById('cliente-id-actualizar').value.trim();
+      const nombre = document.getElementById('cliente-nombre-actualizar').value.trim();
+      const email = document.getElementById('cliente-email-actualizar').value.trim();
+      if(!id){
+        alert('Ingrese ID para actualizar.');
+        return;
+      }
+      const index = clientes.findIndex(c => c.id === id);
+      if(index === -1){
+        alert('Cliente no encontrado.');
+        return;
+      }
+      if(nombre) clientes[index].nombre = nombre;
+      if(email) clientes[index].email = email;
+      mostrarClientes();
+      alert('Cliente actualizado.');
+    }
+    function eliminarCliente() {
+      const id = document.getElementById('cliente-id-eliminar').value.trim();
+      if(!id){
+        alert('Ingrese ID para eliminar.');
+        return;
+      }
+      const index = clientes.findIndex(c => c.id === id);
+      if(index === -1){
+        alert('Cliente no encontrado.');
+        return;
+      }
+      clientes.splice(index, 1);
+      mostrarClientes();
+      alert('Cliente eliminado.');
+    }
+    function mostrarClientes() {
+      const ul = document.getElementById('clientes-output');
+      ul.innerHTML = '';
+      if(clientes.length === 0){
+        ul.innerHTML = '<li class="list-group-item text-white-50">No hay clientes registrados.</li>';
+        return;
+      }
+      clientes.forEach(c => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${c.id} | Nombre: ${c.nombre} | Email: ${c.email}`;
+        ul.appendChild(li);
+      });
+    }
+
+    // --- Habitaciones ---
+    let habitaciones = [];
+    function crearHabitacion() {
+      const id = document.getElementById('hab-id').value.trim();
+      const numero = document.getElementById('hab-numero').value.trim();
+      const tipo = document.getElementById('hab-tipo').value.trim();
+      const precio = document.getElementById('hab-precio').value.trim();
+      if(!id || !numero || !tipo || !precio){
+        alert('Complete todos los campos para crear habitación.');
+        return;
+      }
+      if(habitaciones.find(h => h.id === id)){
+        alert('ID ya existe.');
+        return;
+      }
+      habitaciones.push({id, numero, tipo, precio: Number(precio)});
+      mostrarHabitaciones();
+      alert('Habitación creada.');
+    }
+    function actualizarHabitacion() {
+      const id = document.getElementById('hab-id-actualizar').value.trim();
+      const numero = document.getElementById('hab-numero-actualizar').value.trim();
+      const tipo = document.getElementById('hab-tipo-actualizar').value.trim();
+      const precio = document.getElementById('hab-precio-actualizar').value.trim();
+      if(!id){
+        alert('Ingrese ID para actualizar.');
+        return;
+      }
+      const index = habitaciones.findIndex(h => h.id === id);
+      if(index === -1){
+        alert('Habitación no encontrada.');
+        return;
+      }
+      if(numero) habitaciones[index].numero = numero;
+      if(tipo) habitaciones[index].tipo = tipo;
+      if(precio) habitaciones[index].precio = Number(precio);
+      mostrarHabitaciones();
+      alert('Habitación actualizada.');
+    }
+    function eliminarHabitacion() {
+      const id = document.getElementById('hab-id-eliminar').value.trim();
+      if(!id){
+        alert('Ingrese ID para eliminar.');
+        return;
+      }
+      const index = habitaciones.findIndex(h => h.id === id);
+      if(index === -1){
+        alert('Habitación no encontrada.');
+        return;
+      }
+      habitaciones.splice(index, 1);
+      mostrarHabitaciones();
+      alert('Habitación eliminada.');
+    }
+    function mostrarHabitaciones() {
+      const ul = document.getElementById('habitaciones-output');
+      ul.innerHTML = '';
+      if(habitaciones.length === 0){
+        ul.innerHTML = '<li class="list-group-item text-white-50">No hay habitaciones registradas.</li>';
+        return;
+      }
+      habitaciones.forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${h.id} | Número: ${h.numero} | Tipo: ${h.tipo} | Precio: $${h.precio}`;
+        ul.appendChild(li);
+      });
+    }
+
+    // --- Reservas ---
+    let reservas = [];
+    function crearReserva() {
+      const id = document.getElementById('res-id').value.trim();
+      const clienteId = document.getElementById('res-cliente-id').value.trim();
+      const habId = document.getElementById('res-habitacion-id').value.trim();
+      const fechaIn = document.getElementById('res-fecha-in').value;
+      const fechaOut = document.getElementById('res-fecha-out').value;
+      if(!id || !clienteId || !habId || !fechaIn || !fechaOut){
+        alert('Complete todos los campos para crear reserva.');
+        return;
+      }
+      if(reservas.find(r => r.id === id)){
+        alert('ID ya existe.');
+        return;
+      }
+      reservas.push({id, clienteId, habId, fechaIn, fechaOut});
+      mostrarReservas();
+      alert('Reserva creada.');
+    }
+    function actualizarReserva() {
+      const id = document.getElementById('res-id-actualizar').value.trim();
+      const clienteId = document.getElementById('res-cliente-id-actualizar').value.trim();
+      const habId = document.getElementById('res-habitacion-id-actualizar').value.trim();
+      const fechaIn = document.getElementById('res-fecha-in-actualizar').value;
+      const fechaOut = document.getElementById('res-fecha-out-actualizar').value;
+      if(!id){
+        alert('Ingrese ID para actualizar.');
+        return;
+      }
+      const index = reservas.findIndex(r => r.id === id);
+      if(index === -1){
+        alert('Reserva no encontrada.');
+        return;
+      }
+      if(clienteId) reservas[index].clienteId = clienteId;
+      if(habId) reservas[index].habId = habId;
+      if(fechaIn) reservas[index].fechaIn = fechaIn;
+      if(fechaOut) reservas[index].fechaOut = fechaOut;
+      mostrarReservas();
+      alert('Reserva actualizada.');
+    }
+    function eliminarReserva() {
+      const id = document.getElementById('res-id-eliminar').value.trim();
+      if(!id){
+        alert('Ingrese ID para eliminar.');
+        return;
+      }
+      const index = reservas.findIndex(r => r.id === id);
+      if(index === -1){
+        alert('Reserva no encontrada.');
+        return;
+      }
+      reservas.splice(index, 1);
+      mostrarReservas();
+      alert('Reserva eliminada.');
+    }
+    function mostrarReservas() {
+      const ul = document.getElementById('reservas-output');
+      ul.innerHTML = '';
+      if(reservas.length === 0){
+        ul.innerHTML = '<li class="list-group-item text-white-50">No hay reservas registradas.</li>';
+        return;
+      }
+      reservas.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${r.id} | Cliente ID: ${r.clienteId} | Habitación ID: ${r.habId} | Entrada: ${r.fechaIn} | Salida: ${r.fechaOut}`;
+        ul.appendChild(li);
+      });
+    }
+
+    // --- Pagos ---
+    let pagos = [];
+    function crearPago() {
+      const id = document.getElementById('pag-id').value.trim();
+      const reservaId = document.getElementById('pag-reserva-id').value.trim();
+      const monto = document.getElementById('pag-monto').value.trim();
+      const fecha = document.getElementById('pag-fecha').value;
+      if(!id || !reservaId || !monto || !fecha){
+        alert('Complete todos los campos para crear pago.');
+        return;
+      }
+      if(pagos.find(p => p.id === id)){
+        alert('ID ya existe.');
+        return;
+      }
+      pagos.push({id, reservaId, monto: Number(monto), fecha});
+      mostrarPagos();
+      alert('Pago creado.');
+    }
+    function actualizarPago() {
+      const id = document.getElementById('pag-id-actualizar').value.trim();
+      const reservaId = document.getElementById('pag-reserva-id-actualizar').value.trim();
+      const monto = document.getElementById('pag-monto-actualizar').value.trim();
+      const fecha = document.getElementById('pag-fecha-actualizar').value;
+      if(!id){
+        alert('Ingrese ID para actualizar.');
+        return;
+      }
+      const index = pagos.findIndex(p => p.id === id);
+      if(index === -1){
+        alert('Pago no encontrado.');
+        return;
+      }
+      if(reservaId) pagos[index].reservaId = reservaId;
+      if(monto) pagos[index].monto = Number(monto);
+      if(fecha) pagos[index].fecha = fecha;
+      mostrarPagos();
+      alert('Pago actualizado.');
+    }
+    function eliminarPago() {
+      const id = document.getElementById('pag-id-eliminar').value.trim();
+      if(!id){
+        alert('Ingrese ID para eliminar.');
+        return;
+      }
+      const index = pagos.findIndex(p => p.id === id);
+      if(index === -1){
+        alert('Pago no encontrado.');
+        return;
+      }
+      pagos.splice(index, 1);
+      mostrarPagos();
+      alert('Pago eliminado.');
+    }
+    function mostrarPagos() {
+      const ul = document.getElementById('pagos-output');
+      ul.innerHTML = '';
+      if(pagos.length === 0){
+        ul.innerHTML = '<li class="list-group-item text-white-50">No hay pagos registrados.</li>';
+        return;
+      }
+      pagos.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${p.id} | Reserva ID: ${p.reservaId} | Monto: $${p.monto} | Fecha: ${p.fecha}`;
+        ul.appendChild(li);
+      });
+    }
+  </script>
+
 </body>
 </html>
